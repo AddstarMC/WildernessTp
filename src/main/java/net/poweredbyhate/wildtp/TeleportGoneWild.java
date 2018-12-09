@@ -120,7 +120,10 @@ public class TeleportGoneWild {
                 return;
         }
         World finalWorld = world;
-        MinYMaX minmax = new MinYMaX(world);
+
+        // Get the WorldBorder min/max values
+        MinYMaX minmax = new MinYMaX(world, maxX, minX, maxZ, minZ);
+
         if (WildTP.notPaper)
         {
             for (int i = 0; i < Math.min(retries, 4); i++) {
@@ -170,7 +173,7 @@ public class TeleportGoneWild {
                     World rippedPage = finalWorld;
                     if (pageRipper)
                         rippedPage = getRandomeWorld(instace.randomeWorlds);
-                    MinYMaX minmax = new MinYMaX(rippedPage);
+                    MinYMaX minmax = new MinYMaX(rippedPage, maxX, minX, maxZ, minZ);
                     Location loco = new Location(rippedPage, r4nd0m(minmax.maxX, minmax.minX), 5, r4nd0m(minmax.maxY, minmax.minY));
                     try
                     {
@@ -364,19 +367,19 @@ class MinYMaX
     int minY = WildTP.minXY;
     int maxY = WildTP.maxXY;
 
-    MinYMaX(World w)
+    MinYMaX(World w, int currentTpMaxX, int currentTpMinX, int currentTpMaxZ, int currentTpMinZ)
     {
         try
         {
             if (Bukkit.isPrimaryThread())
-                findWall(w);
+                findWall(w, currentTpMaxX, currentTpMinX, currentTpMaxZ, currentTpMinZ);
             else
                 instace.getServer().getScheduler().callSyncMethod(instace, new Callable<Location>()
                 {
                     @Override
                     public Location call() throws Exception
                     {
-                        findWall(w);
+                        findWall(w, currentTpMaxX, currentTpMinX, currentTpMaxZ, currentTpMinZ);
                         return null;
                     }
                 }).get();
@@ -384,24 +387,50 @@ class MinYMaX
         catch (InterruptedException | ExecutionException ignored) {}
     }
 
-    private void findWall(World w)
+    private void findWall(World w, int currentTpMaxX, int currentTpMinX, int currentTpMaxZ, int currentTpMinZ)
     {
         if (WildTP.wb)
         {
+            WildTP.debug("Checking for WorldBorder limits for " + w.getName());
+
             BorderData border = Config.Border(w.getName());
             if (border != null)
             {
                 int x = border.getRadiusX();
-                int y = border.getRadiusZ();
-                if ((border.getShape() == null && Config.ShapeRound()) || (border.getShape() != null && border.getShape()))
+                int z = border.getRadiusZ();
+
+                WildTP.debug("World " + w.getName() + " has RadiusX: " + x + " and RadiusZ: " + z);
+
+                Boolean shapeIsRound = border.getShape();
+
+                if ((shapeIsRound == null && Config.ShapeRound()) || (shapeIsRound != null && shapeIsRound))
                 {
                     x = (int)(Math.sqrt(2) * x) / 2;
-                    y = (int)(Math.sqrt(2) * y) / 2;
+                    z = (int)(Math.sqrt(2) * z) / 2;
+                    WildTP.debug("World " + w.getName() + " has a round border; adjusted values, X: " + x + " and Z: " + z);
                 }
+
                 minX = Math.max((int)border.getX() - x, WildTP.minXY);
                 maxX = Math.min((int)border.getX() + x, WildTP.maxXY);
-                minY = Math.max((int)border.getZ() - y, WildTP.minXY);
-                maxY = Math.min((int)border.getZ() + y, WildTP.maxXY);
+                minY = Math.max((int)border.getZ() - z, WildTP.minXY);
+                maxY = Math.min((int)border.getZ() + z, WildTP.maxXY);
+
+                if (currentTpMinX != WildTP.minXY) {
+                    // Possibly override minX with currentTpMinX
+                    minX = Math.max(minX, currentTpMinX);
+                }
+                if (currentTpMaxX != WildTP.maxXY) {
+                    // Possibly override maxX with currentTpMaxX
+                    maxX = Math.min(maxX, currentTpMaxX);
+                }
+                if (currentTpMinZ != WildTP.minXY) {
+                    // Possibly override minY with currentTpMinZ
+                    minY = Math.max(minY, currentTpMinZ);
+                }
+                if (currentTpMaxZ != WildTP.maxXY) {
+                    // Possibly override maxY with currentTpMaxZ
+                    maxY = Math.min(maxY, currentTpMaxZ);
+                }
 
                 WildTP.debug("Limits determined by findWall:" +
                         " minX: " + minX + ", maxX: " + maxX + "" +
