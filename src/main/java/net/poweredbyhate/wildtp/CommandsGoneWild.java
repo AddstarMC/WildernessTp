@@ -20,6 +20,7 @@ public class CommandsGoneWild implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
+        // Wild command called by CraftPlayer{name=PlayerName}
         WildTP.debug("Wild command called by " + sender);
 
         if (args.length >= 1 && sender.getServer().getPlayerExact(args[0]) != null && sender.hasPermission("wild.wildtp.others")) {
@@ -37,6 +38,10 @@ public class CommandsGoneWild implements CommandExecutor {
             int maxZ = WildTP.maxXY;
             int minX = WildTP.minXY;
             int minZ = WildTP.minXY;
+
+            // PlayerName called /wild north (or south, east, west)
+            WildTP.debug(p.getName() + " called /wild <direction> heading " + args[0]);
+
             switch (args[0].toLowerCase())
             {
                 case "north":
@@ -50,9 +55,11 @@ public class CommandsGoneWild implements CommandExecutor {
                     break;
                 case "west":
                     maxX = p.getLocation().getBlockX();
+                    break;
+                default:
+                    WildTP.debug("Unknown direction: " + args[0]);
             }
 
-            WildTP.debug(p.getName() + " called /wild <direction>");
             new TeleportGoneWild().WildTeleport(p, maxX, minX, maxZ, minZ, p.hasPermission("wild.wildtp.delay.bypass"));
         }
         else if (sender.hasPermission("wild.wildtp.world") && args.length >= 1 && Bukkit.getWorld(args[0]) != null)

@@ -45,6 +45,9 @@ public class TeleportGoneWild {
     public void WildTeleport(final Player p, final int maxX, final int minX, final int maxZ, final int minZ, final boolean bypass)
     {
         this.bypass = bypass;
+
+        WildTP.debug(p.getName() + " has bypass = " + bypass);
+
         realTeleportt(p, null, maxX, minX, maxZ, minZ);
     }
 
@@ -71,7 +74,9 @@ public class TeleportGoneWild {
     public boolean realTeleportt2(final Player p, Location locNotFinal)
     {
         PreWildTeleportEvent preWildTeleportEvent = new PreWildTeleportEvent(p, locNotFinal);
-        WildTP.debug("Calling preTeleportEvent");
+        WildTP.debug("Calling preTeleportEvent for " + p.getDisplayName() + ", coordinates " +
+                (int)locNotFinal.getX() + ", " + (int)locNotFinal.getY() + ", " + (int)locNotFinal.getZ());
+
         Bukkit.getServer().getPluginManager().callEvent(preWildTeleportEvent);
         WildTP.debug("Called preWildTeleportEvent");
         if (preWildTeleportEvent.isCancelled()) {
@@ -99,14 +104,19 @@ public class TeleportGoneWild {
 
     public void getRandomeLocation(World world, Player player, int maxX, int minX, int maxZ, int minZ)
     {
+        WildTP.debug("Enter getRandomeLocation");
+
         final boolean pageRipper = world == null && instace.useRandomeWorldz;
         if (world == null)
         {
-            if (instace.useRandomeWorldz)
+            if (instace.useRandomeWorldz) {
                 world = getRandomeWorld(instace.randomeWorlds);
-            else if (player != null)
+                WildTP.debug("Chose random world " + world.getName());
+            }
+            else if (player != null) {
                 world = player.getWorld();
-            else
+                WildTP.debug("Using player world " + world.getName());
+            } else
                 return;
         }
         World finalWorld = world;
@@ -114,6 +124,9 @@ public class TeleportGoneWild {
         if (WildTP.notPaper)
         {
             for (int i = 0; i < Math.min(retries, 4); i++) {
+                int attemptNum = i + 1;
+                WildTP.debug("Not paper, attempt: " + attemptNum);
+
                 Location loco = new Location(world, r4nd0m(minmax.maxX, minmax.minX), 5, r4nd0m(minmax.maxY, minmax.minY));
                 if (bonelessIceScream(loco))
                     loco = netherLocation(loco);
@@ -148,8 +161,12 @@ public class TeleportGoneWild {
             @Override
             public void run()
             {
+                int attemptNum = 0;
                 while (retries-- >= 0)
                 {
+                    attemptNum++;
+                    WildTP.debug("Paper, attempt: " + attemptNum);
+
                     World rippedPage = finalWorld;
                     if (pageRipper)
                         rippedPage = getRandomeWorld(instace.randomeWorlds);
@@ -323,13 +340,13 @@ public class TeleportGoneWild {
                         return;
                     TooCool2Teleport.makeHot(p);
                 }
-                WildTP.debug("Teleporting " + p.getName() + loc);
+                WildTP.debug("Teleporting " + p.getName() + " " + loc);
                 if (!p.teleport(loc))
                 {
                     WildTP.debug("teleport was canceled.");
                     return;
                 }
-                WildTP.debug(p.getName()+ " Teleported" + p.getLocation());
+                WildTP.debug(p.getName()+ " Teleported " + p.getLocation());
                 WildTP.debug(p.getName() + " Adding to cooldown");
                 WildTP.checKar.addKewlzDown(p.getUniqueId());
                 WildTP.debug("Added to cooldown " + p.getUniqueId());
@@ -385,9 +402,16 @@ class MinYMaX
                 maxX = Math.min((int)border.getX() + x, WildTP.maxXY);
                 minY = Math.max((int)border.getZ() - y, WildTP.minXY);
                 maxY = Math.min((int)border.getZ() + y, WildTP.maxXY);
+
+                WildTP.debug("Limits determined by findWall:" +
+                        " minX: " + minX + ", maxX: " + maxX + "" +
+                        " minY: " + minY + ", maxY: " + maxY);
+
                 return;
             }
         }
+
+        WildTP.debug("Checking for WorldBorder limits for " + w.getName() + " using w.getWorldBorder");
 
         WorldBorder b = w.getWorldBorder();
         if (b == null)
@@ -396,5 +420,10 @@ class MinYMaX
         maxX = Math.min(b.getCenter().getBlockX() + (int)b.getSize(), WildTP.maxXY);
         minY = Math.max(b.getCenter().getBlockZ() - (int)b.getSize(), WildTP.minXY);
         maxY = Math.min(b.getCenter().getBlockZ() + (int)b.getSize(), WildTP.maxXY);
+
+        WildTP.debug("Limits determined by findWall:" +
+                " minX: " + minX + ", maxX: " + maxX +
+                " minY: " + minY + ", maxY: " + maxY);
+
     }
 }
