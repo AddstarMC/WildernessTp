@@ -6,6 +6,9 @@
     <groupId>net.poweredbyhate</groupId>
     <artifactId>WildTP</artifactId>
     <version>0.1</version>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <build>
         <defaultGoal>clean package</defaultGoal>
         <finalName>${project.name}</finalName>
