@@ -67,7 +67,7 @@
         <dependency>
             <groupId>com.github.TechFortress</groupId>
             <artifactId>GriefPrevention</artifactId>
-            <version>16.11.5</version>
+            <version>16.13.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.Brettflan</groupId>
